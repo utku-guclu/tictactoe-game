@@ -39,12 +39,20 @@ table tr td:last-child {
 #restart-btn {
   display: none;
   position: absolute;
+  width: 100%;
   top: 0;
-  right: 0;
   padding: 6px 12px;
-  background-color: rgb(19 213 19 / 0.9);
+  color: white;
+  background-color: black;
   border: none;
   border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+#restart-btn:hover {
+  cursor: pointer;
+  color: rgb(129 255 129 / 90%)
 }
 
 #header {
@@ -53,6 +61,7 @@ table tr td:last-child {
 }
 
 .endgame {
+  overflow: hidden;
   display: none;
   width: 200px;
   top: 120px;

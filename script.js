@@ -106,7 +106,3 @@ function checkTie() {
   }
   return false;
 }
-
-restartButton.addEventListener("click", (e) => {
-  e.target.style.display = "none";
-});
