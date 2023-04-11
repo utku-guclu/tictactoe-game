@@ -8,13 +8,49 @@ const App = {
     squares: document.querySelectorAll('[data-id="square"]'),
   },
 
+  state: {
+    moves: [],
+  },
+
+  getGameStatus(moves) {
+    const playerMoves = moves
+      .filter((move) => move.isPlayer)
+      .map((move) => move.squareId);
+    const cpuMoves = moves.filter((move) => !move.isPlayer);
+
+    // winning pattern
+    const winningPatterns = [
+      [1, 2, 3],
+      [1, 5, 9],
+      [1, 4, 7],
+      [2, 5, 8],
+      [3, 6, 9],
+      [4, 5, 6],
+      [7, 8, 9],
+    ];
+
+    let winner = null;
+
+    winningPatterns.forEach((pattern) => {
+      const playerWins = pattern.every((v) => playerMoves.includes(v));
+      if (playerWins) {
+        console.log("player wins");
+      }
+    });
+
+    return {
+      status: "in-progress",
+      winner,
+    };
+  },
+
   init() {
     App.registerEventListeners();
   },
 
   registerEventListeners() {
     const { menu, menuItems, resetBtn, newRoundBtn, squares } = App.$;
-    console.log(squares);
+
     menu.addEventListener("click", () => {
       menuItems.classList.toggle("hidden");
     });
@@ -25,8 +61,37 @@ const App = {
       console.log("1");
     });
     squares.forEach((square) =>
-      square.addEventListener("click", (e) => {
-        console.log(e.target.dataset.id);
+      square.addEventListener("click", () => {
+        this.getGameStatus(App.state.moves);
+        // check if there is already a play
+        const hasMove = (squareId) => {
+          const existingMove = App.state.moves.find(
+            (move) => move.squareId === squareId
+          );
+          return existingMove;
+        };
+
+        if (hasMove(+square.id)) {
+          return;
+        }
+        // determine whether the player is person
+        const lastMove = App.state.moves.at(-1);
+        const isPlayer = (player) => !player;
+        const currentPlayer =
+          this.state.moves.length === 0 ? true : isPlayer(lastMove.isPlayer);
+
+        const icon = document.createElement("i");
+        const iconXO = currentPlayer ? "fa-x" : "fa-o";
+        icon.classList.add("fa-solid", iconXO, "yellow");
+
+        this.state.moves.push({
+          squareId: +square.id,
+          isPlayer: currentPlayer,
+        });
+
+        this.state.currentPlayer = isPlayer(currentPlayer);
+
+        square.replaceChildren(icon);
       })
     );
   },
