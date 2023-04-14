@@ -1,4 +1,5 @@
 import View from "./view.js";
+import Store from "./store.js";
 
 // const App = {
 //   // All of our selected HTML elements
@@ -153,8 +154,23 @@ import View from "./view.js";
 
 // window.addEventListener("load", App.init);
 
+class player {
+  constructor(id, name, iconClass, colorClass) {
+    (this.id = id),
+      (this.name = name),
+      (this.iconClass = iconClass),
+      (this.colorClass = colorClass);
+  }
+}
+
+const player1 = new player(1, "Player 1", "fa-x", "turquoise");
+const player2 = new player(2, "Player 2", "fa-o", "yellow");
+
+const players = [player1, player2];
+
 function init() {
   const view = new View();
+  const store = new Store(players);
 
   view.bindGameResetEvent((e) => {
     console.log("Reset event");
@@ -166,9 +182,22 @@ function init() {
     console.log(e);
   });
 
-  view.bindPlayerMoveEvent((e) => {
-    view.setTurnIndicator(2);
-    view.handlePlayerMove(e.target, 2);
+  view.bindPlayerMoveEvent((square) => {
+    // use callback here -> square
+    const exisitingMove = store.game.moves.find(
+      (move) => move.squareId === +square.id
+    );
+
+    if (exisitingMove) return; // play only once per square
+    // (view) move
+    // Place an icon of the current player in square
+    view.handlePlayerMove(square, store.game.currentPlayer);
+    // update player move
+    // Advance to the next state by pushing a move to the moves array
+    store.playerMove(+square.id);
+    // (view) turn
+    // Set the next player's turn indicator
+    view.setTurnIndicator(store.game.currentPlayer);
   });
 }
 
