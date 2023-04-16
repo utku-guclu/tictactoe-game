@@ -1,19 +1,42 @@
 const initialValue = {
-  moves: [],
+  currentGameMoves: [],
+  history: {
+    currentRoundGames: [],
+    allGames: [],
+  },
 };
 
-export default class Store {
-  #state = initialValue;
-
-  constructor(players) {
+export default class Store extends EventTarget{
+  constructor(key, players) {
+    super()
+    this.storageKey = key;
     this.players = players;
+  }
+
+  get stats() {
+    const state = this.#getState();
+
+    return {
+      playerWithStats: this.players.map((player) => {
+        const wins = state.history.currentRoundGames.filter(
+          (game) => game.status.winner?.id === player.id
+        ).length;
+        return {
+          ...player,
+          wins,
+        };
+      }),
+      ties: state.history.currentRoundGames.filter(
+        (game) => game.status.winner === null
+      ).length,
+    };
   }
 
   // you dont need closure et the end of the method while invoking it *()
   get game() {
     const state = this.#getState();
 
-    const currentPlayer = this.players[state.moves.length % 2];
+    const currentPlayer = this.players[state.currentGameMoves.length % 2];
 
     const winningPatterns = [
       [1, 2, 3],
@@ -29,7 +52,7 @@ export default class Store {
     let winner = null;
 
     for (let player of this.players) {
-      const selectedSquareIds = state.moves
+      const selectedSquareIds = state.currentGameMoves
         .filter((move) => move.player.id === player.id)
         .map((move) => move.squareId);
 
@@ -41,22 +64,20 @@ export default class Store {
     }
 
     return {
-      moves: state.moves,
+      moves: state.currentGameMoves,
       currentPlayer,
       status: {
-        isComplete: winner !== null || state.moves.length === 9,
+        isComplete: winner !== null || state.currentGameMoves.length === 9,
         winner,
       },
     };
   }
 
   playerMove(squareId) {
-    const state = this.#getState();
-
     // built-in method
-    const stateClone = structuredClone(state);
+    const stateClone = structuredClone(this.#getState());
 
-    stateClone.moves.push({
+    stateClone.currentGameMoves.push({
       squareId,
       player: this.game.currentPlayer,
     });
@@ -64,8 +85,32 @@ export default class Store {
     this.#saveState(stateClone);
   }
 
+  reset() {
+    const stateClone = structuredClone(this.#getState());
+    const { status, moves } = this.game;
+    if (this.game.status.isComplete) {
+      stateClone.history.currentRoundGames.push({
+        moves,
+        status,
+      });
+    }
+
+    stateClone.currentGameMoves = [];
+
+    this.#saveState(stateClone);
+  }
+
+  newRound() {
+    const stateClone = structuredClone(this.#getState());
+    stateClone.history.allGames.push(...stateClone.currentGameMoves);
+    stateClone.history.currentRoundGames = [];
+    this.#saveState(stateClone);
+    this.reset();
+  }
+
   #getState() {
-    return this.#state;
+    const item = window.localStorage.getItem(this.storageKey);
+    return item ? JSON.parse(item) : initialValue;
   }
   #saveState(stateOrFn) {
     const prevState = this.#getState();
@@ -82,6 +127,7 @@ export default class Store {
       default:
         throw new Error("Invalid argument passed to SaveState");
     }
-    this.#state = newState;
+    window.localStorage.setItem(this.storageKey, JSON.stringify(newState));
+    this.dispatchEvent(new Event('statechange'));
   }
 }

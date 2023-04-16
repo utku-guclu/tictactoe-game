@@ -170,16 +170,32 @@ const players = [player1, player2];
 
 function init() {
   const view = new View();
-  const store = new Store(players);
+  const store = new Store("live-t3-storage-key", players);
 
-  view.bindGameResetEvent((e) => {
-    console.log("Reset event");
-    console.log(e);
+  // Current tab state changes
+  store.addEventListener('statechange', () => {
+    view.render(store.game, store.stats);
+  })
+
+  // Different tab state chnages
+  window.addEventListener("storage", () => {
+    console.log("State changed from another tab");
+    view.render(store.game, store.stats);
   });
 
-  view.bindNewRoundEvent((e) => {
-    console.log("Round event");
-    console.log(e);
+  // view current status // The first load of the document
+  view.render(store.game, store.stats);
+  // view current status //
+
+  view.bindGameResetEvent(
+    //CALL
+    () => {
+      store.reset();
+    }
+  );
+
+  view.bindNewRoundEvent(() => {
+    store.newRound();
   });
 
   view.bindPlayerMoveEvent((square) => {
@@ -189,15 +205,10 @@ function init() {
     );
 
     if (exisitingMove) return; // play only once per square
-    // (view) move
-    // Place an icon of the current player in square
-    view.handlePlayerMove(square, store.game.currentPlayer);
+
     // update player move
     // Advance to the next state by pushing a move to the moves array
     store.playerMove(+square.id);
-    // (view) turn
-    // Set the next player's turn indicator
-    view.setTurnIndicator(store.game.currentPlayer);
   });
 }
 
