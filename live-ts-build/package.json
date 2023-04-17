@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "live-server": "^1.2.2"
+  },
+  "name": "live-ts-build",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  }
+}
